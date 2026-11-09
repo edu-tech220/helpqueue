@@ -1,0 +1,91 @@
+@page
+@model HelpQueue.Web.Pages.Tickets.IndexModel
+@{
+    ViewData["Title"] = "Tickets";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h1>Tickets</h1>
+    @if (User.IsInRole("Customer") || User.IsInRole("Admin"))
+    {
+        <a asp-page="/Tickets/Create" class="btn btn-primary">New ticket</a>
+    }
+</div>
+
+<form method="get" class="row g-2 mb-3">
+    <div class="col-auto">
+        <select name="Status" class="form-select" asp-for="Status">
+            <option value="">All statuses</option>
+            <option value="New">New</option>
+            <option value="Assigned">Assigned</option>
+            <option value="InProgress">In progress</option>
+            <option value="OnHold">On hold</option>
+            <option value="Resolved">Resolved</option>
+            <option value="Closed">Closed</option>
+        </select>
+    </div>
+    <div class="col-auto">
+        <select name="Priority" class="form-select" asp-for="Priority">
+            <option value="">All priorities</option>
+            <option value="Low">Low</option>
+            <option value="Medium">Medium</option>
+            <option value="High">High</option>
+            <option value="Critical">Critical</option>
+        </select>
+    </div>
+    <div class="col-auto">
+        <button type="submit" class="btn btn-outline-secondary">Filter</button>
+    </div>
+</form>
+
+<table class="table table-striped align-middle">
+    <thead>
+        <tr>
+            <th>Title</th>
+            <th>Status</th>
+            <th>Priority</th>
+            <th>Category</th>
+            <th>Agent</th>
+            <th>Response due</th>
+            <th>Resolution due</th>
+        </tr>
+    </thead>
+    <tbody>
+    @foreach (var ticket in Model.Tickets.Items)
+    {
+        <tr>
+            <td><a asp-page="/Tickets/Details" asp-route-id="@ticket.Id">@ticket.Title</a></td>
+            <td><span class="badge bg-secondary">@ticket.Status</span></td>
+            <td>@ticket.Priority</td>
+            <td>@ticket.CategoryName</td>
+            <td>@(ticket.AssignedAgentName ?? "Unassigned")</td>
+            <td>
+                @ticket.ResponseDueAt.ToString("g")
+                @if (ticket.ResponseBreached) { <span class="badge bg-danger">breached</span> }
+            </td>
+            <td>
+                @ticket.ResolutionDueAt.ToString("g")
+                @if (ticket.ResolutionBreached) { <span class="badge bg-danger">breached</span> }
+            </td>
+        </tr>
+    }
+    @if (Model.Tickets.Items.Count == 0)
+    {
+        <tr><td colspan="7" class="text-center text-muted">No tickets found.</td></tr>
+    }
+    </tbody>
+</table>
+
+@if (Model.Tickets.TotalPages > 1)
+{
+    <nav>
+        <ul class="pagination">
+            @for (var i = 1; i <= Model.Tickets.TotalPages; i++)
+            {
+                <li class="page-item @(i == Model.Tickets.Page ? "active" : "")">
+                    <a class="page-link" asp-page="/Tickets/Index" asp-route-Page="@i" asp-route-Status="@Model.Status" asp-route-Priority="@Model.Priority">@i</a>
+                </li>
+            }
+        </ul>
+    </nav>
+}
