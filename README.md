@@ -11,6 +11,10 @@ through `IHttpClientFactory`. No framework ticket templates here — the SLA dea
 least-loaded-agent assignment, the escalation sweep and the reopen window are all real, testable
 business rules.
 
+**Stack:** C# / .NET 8 · ASP.NET Core Web API · ASP.NET Core Razor Pages (server-rendered HTML, no
+JS framework) · Entity Framework Core · SQL Server (SQLite for tests) · xUnit · Docker · GitHub
+Actions.
+
 ## What it solves
 
 A small IT department fields support requests (broken laptop, VPN down, access request, printer
