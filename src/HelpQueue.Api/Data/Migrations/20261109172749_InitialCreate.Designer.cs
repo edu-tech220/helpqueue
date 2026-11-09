@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace HelpQueue.Api.Data.Migrations
 {
     [DbContext(typeof(HelpQueueDbContext))]
-    [Migration("20261109171005_InitialCreate")]
+    [Migration("20261109172749_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -115,8 +115,7 @@ namespace HelpQueue.Api.Data.Migrations
                     b.Property<byte[]>("RowVersion")
                         .IsConcurrencyToken()
                         .IsRequired()
-                        .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("rowversion");
+                        .HasColumnType("varbinary(max)");
 
                     b.Property<int>("Status")
                         .HasColumnType("int");
@@ -203,8 +202,7 @@ namespace HelpQueue.Api.Data.Migrations
                     b.Property<byte[]>("RowVersion")
                         .IsConcurrencyToken()
                         .IsRequired()
-                        .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("rowversion");
+                        .HasColumnType("varbinary(max)");
 
                     b.HasKey("Id");
 

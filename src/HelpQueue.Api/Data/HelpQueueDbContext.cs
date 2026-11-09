@@ -20,7 +20,7 @@ public class HelpQueueDbContext : DbContext
         modelBuilder.Entity<User>(entity =>
         {
             entity.HasIndex(u => u.Email).IsUnique();
-            entity.Property(u => u.RowVersion).IsRowVersion();
+            entity.Property(u => u.RowVersion).IsConcurrencyToken();
         });
 
         modelBuilder.Entity<Category>(entity =>
@@ -35,7 +35,7 @@ public class HelpQueueDbContext : DbContext
 
         modelBuilder.Entity<Ticket>(entity =>
         {
-            entity.Property(t => t.RowVersion).IsRowVersion();
+            entity.Property(t => t.RowVersion).IsConcurrencyToken();
 
             entity.HasOne(t => t.Category)
                 .WithMany()
@@ -71,5 +71,35 @@ public class HelpQueueDbContext : DbContext
 
             entity.HasIndex(c => c.TicketId);
         });
+    }
+
+    public override int SaveChanges(bool acceptAllChangesOnSuccess)
+    {
+        StampConcurrencyTokens();
+        return base.SaveChanges(acceptAllChangesOnSuccess);
+    }
+
+    public override Task<int> SaveChangesAsync(bool acceptAllChangesOnSuccess, CancellationToken cancellationToken = default)
+    {
+        StampConcurrencyTokens();
+        return base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken);
+    }
+
+    /// <summary>
+    /// App-managed replacement for a SQL Server `rowversion` column: every
+    /// insert/update of an <see cref="IHasRowVersion"/> entity gets a fresh
+    /// random token, so optimistic concurrency behaves the same way on
+    /// SQL Server and on SQLite (used in tests), with no provider-specific
+    /// column type or trigger required.
+    /// </summary>
+    private void StampConcurrencyTokens()
+    {
+        foreach (var entry in ChangeTracker.Entries<IHasRowVersion>())
+        {
+            if (entry.State is EntityState.Added or EntityState.Modified)
+            {
+                entry.Entity.RowVersion = Guid.NewGuid().ToByteArray();
+            }
+        }
     }
 }

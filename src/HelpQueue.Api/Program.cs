@@ -81,13 +81,14 @@ builder.Services.AddCors(options =>
         .AllowAnyMethod());
 });
 
+var rateLimitSection = builder.Configuration.GetSection("RateLimiting");
 builder.Services.AddRateLimiter(options =>
 {
     options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
     options.AddFixedWindowLimiter("login", limiterOptions =>
     {
-        limiterOptions.PermitLimit = 5;
-        limiterOptions.Window = TimeSpan.FromMinutes(1);
+        limiterOptions.PermitLimit = rateLimitSection.GetValue("LoginPermitLimit", 5);
+        limiterOptions.Window = TimeSpan.FromSeconds(rateLimitSection.GetValue("LoginWindowSeconds", 60));
         limiterOptions.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
         limiterOptions.QueueLimit = 0;
     });
@@ -101,7 +102,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
-else
+else if (!app.Environment.IsEnvironment("Testing"))
 {
     app.UseExceptionHandler();
 }
