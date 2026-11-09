@@ -1,0 +1,29 @@
+@page
+@model HelpQueue.Web.Pages.Admin.WorkloadModel
+@{
+    ViewData["Title"] = "Agent workload";
+}
+
+<h1>Agent workload</h1>
+
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Agent</th>
+            <th>Email</th>
+            <th>Active</th>
+            <th>Open tickets</th>
+        </tr>
+    </thead>
+    <tbody>
+    @foreach (var agent in Model.Agents)
+    {
+        <tr>
+            <td>@agent.DisplayName</td>
+            <td>@agent.Email</td>
+            <td>@(agent.IsActive ? "Yes" : "No")</td>
+            <td>@agent.OpenTicketCount</td>
+        </tr>
+    }
+    </tbody>
+</table>

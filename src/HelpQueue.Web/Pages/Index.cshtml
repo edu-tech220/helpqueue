@@ -1,10 +1,19 @@
-﻿@page
+@page
 @model IndexModel
 @{
-    ViewData["Title"] = "Home page";
+    ViewData["Title"] = "HelpQueue";
 }
 
 <div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+    <h1 class="display-4">HelpQueue</h1>
+    <p class="lead">IT support ticketing with SLA tracking, automatic assignment and escalation.</p>
+
+    @if (User.Identity?.IsAuthenticated == true)
+    {
+        <a asp-page="/Tickets/Index" class="btn btn-primary btn-lg">Go to my tickets</a>
+    }
+    else
+    {
+        <a asp-page="/Account/Login" class="btn btn-primary btn-lg">Log in</a>
+    }
 </div>
