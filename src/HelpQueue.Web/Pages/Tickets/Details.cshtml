@@ -1,0 +1,131 @@
+@page "{id:int}"
+@model HelpQueue.Web.Pages.Tickets.DetailsModel
+@{
+    ViewData["Title"] = $"Ticket #{Model.Ticket.Id}";
+}
+
+<h1>@Model.Ticket.Title</h1>
+<p class="text-muted">
+    #@Model.Ticket.Id &middot; @Model.Ticket.CategoryName &middot;
+    requested by @Model.Ticket.RequesterName &middot;
+    created @Model.Ticket.CreatedAt.ToString("g")
+</p>
+
+@if (Model.ErrorMessage is not null)
+{
+    <div class="alert alert-danger">@Model.ErrorMessage</div>
+}
+
+<div class="row mb-4">
+    <div class="col-md-8">
+        <p>@Model.Ticket.Description</p>
+    </div>
+    <div class="col-md-4">
+        <table class="table table-sm">
+            <tr><th>Status</th><td><span class="badge bg-secondary">@Model.Ticket.Status</span></td></tr>
+            <tr><th>Priority</th><td>@Model.Ticket.Priority</td></tr>
+            <tr><th>Agent</th><td>@(Model.Ticket.AssignedAgentName ?? "Unassigned")</td></tr>
+            <tr>
+                <th>Response due</th>
+                <td>@Model.Ticket.ResponseDueAt.ToString("g") @(Model.Ticket.ResponseBreached ? "(breached)" : "")</td>
+            </tr>
+            <tr>
+                <th>Resolution due</th>
+                <td>@Model.Ticket.ResolutionDueAt.ToString("g") @(Model.Ticket.ResolutionBreached ? "(breached)" : "")</td>
+            </tr>
+            @if (Model.Ticket.ReopenCount > 0)
+            {
+                <tr><th>Reopened</th><td>@Model.Ticket.ReopenCount time(s)</td></tr>
+            }
+        </table>
+    </div>
+</div>
+
+@if (User.IsInRole("Agent") || User.IsInRole("Admin"))
+{
+    <form method="post" class="mb-4">
+        <input type="hidden" name="id" value="@Model.Ticket.Id" />
+        @switch (Model.Ticket.Status)
+        {
+            case "Assigned":
+                <button type="submit" asp-page-handler="ChangeStatus" name="NewStatus" value="InProgress" class="btn btn-outline-primary">Start progress</button>
+                <button type="submit" asp-page-handler="ChangeStatus" name="NewStatus" value="OnHold" class="btn btn-outline-secondary">Put on hold</button>
+                break;
+            case "InProgress":
+                <button type="submit" asp-page-handler="ChangeStatus" name="NewStatus" value="OnHold" class="btn btn-outline-secondary">Put on hold</button>
+                <button type="submit" asp-page-handler="ChangeStatus" name="NewStatus" value="Resolved" class="btn btn-success">Resolve</button>
+                break;
+            case "OnHold":
+                <button type="submit" asp-page-handler="ChangeStatus" name="NewStatus" value="InProgress" class="btn btn-outline-primary">Resume</button>
+                break;
+            case "Resolved":
+                <button type="submit" asp-page-handler="ChangeStatus" name="NewStatus" value="Closed" class="btn btn-outline-dark">Close</button>
+                break;
+        }
+    </form>
+}
+
+@if ((Model.Ticket.Status is "Resolved" or "Closed") && (User.IsInRole("Customer") || User.IsInRole("Admin")))
+{
+    <form method="post" asp-page-handler="Reopen" class="mb-4">
+        <input type="hidden" name="id" value="@Model.Ticket.Id" />
+        <button type="submit" class="btn btn-warning">Reopen ticket</button>
+    </form>
+}
+
+@if (User.IsInRole("Admin") && Model.Agents.Count > 0)
+{
+    <form method="post" asp-page-handler="Reassign" class="row g-2 mb-4 align-items-end">
+        <input type="hidden" name="id" value="@Model.Ticket.Id" />
+        <div class="col-auto">
+            <label asp-for="ReassignAgentId" class="form-label">Reassign to</label>
+            <select asp-for="ReassignAgentId" class="form-select">
+                @foreach (var agent in Model.Agents)
+                {
+                    <option value="@agent.Id">@agent.DisplayName (@agent.OpenTicketCount open)</option>
+                }
+            </select>
+        </div>
+        <div class="col-auto">
+            <button type="submit" class="btn btn-outline-primary">Reassign</button>
+        </div>
+    </form>
+}
+
+<h4>Comments</h4>
+<ul class="list-group mb-4">
+    @foreach (var comment in Model.Ticket.Comments)
+    {
+        <li class="list-group-item">
+            <div class="d-flex justify-content-between">
+                <strong>@comment.AuthorName</strong>
+                <span class="text-muted small">@comment.CreatedAt.ToString("g")</span>
+            </div>
+            @if (comment.IsInternal)
+            {
+                <span class="badge bg-info text-dark mb-1">internal note</span>
+            }
+            <p class="mb-0">@comment.Body</p>
+        </li>
+    }
+    @if (Model.Ticket.Comments.Count == 0)
+    {
+        <li class="list-group-item text-muted">No comments yet.</li>
+    }
+</ul>
+
+<form method="post" asp-page-handler="AddComment" class="col-md-8">
+    <input type="hidden" name="id" value="@Model.Ticket.Id" />
+    <div class="mb-3">
+        <label asp-for="CommentBody" class="form-label">Add a comment</label>
+        <textarea asp-for="CommentBody" class="form-control" rows="3"></textarea>
+    </div>
+    @if (User.IsInRole("Agent") || User.IsInRole("Admin"))
+    {
+        <div class="form-check mb-3">
+            <input asp-for="IsInternalComment" class="form-check-input" />
+            <label asp-for="IsInternalComment" class="form-check-label">Internal note (hidden from customer)</label>
+        </div>
+    }
+    <button type="submit" class="btn btn-primary">Post comment</button>
+</form>
