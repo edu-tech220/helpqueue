@@ -2,7 +2,7 @@ using HelpQueue.Api.Domain.Enums;
 
 namespace HelpQueue.Api.Domain.Entities;
 
-public class User
+public class User : IHasRowVersion
 {
     public int Id { get; set; }
     public required string Email { get; set; }
