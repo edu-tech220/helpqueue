@@ -1,0 +1,11 @@
+@page
+@model HelpQueue.Web.Pages.Account.AccessDeniedModel
+@{
+    ViewData["Title"] = "Access denied";
+}
+
+<div class="text-center">
+    <h1 class="display-5">Access denied</h1>
+    <p>Your account role does not have permission to view that page.</p>
+    <a asp-page="/Tickets/Index" class="btn btn-primary">Back to tickets</a>
+</div>
